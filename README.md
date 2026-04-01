@@ -1,77 +1,43 @@
-## Backend – Compiler Visual Tutor
+# Compiler Visual Tutor – Frontend
 
-This is the **FastAPI backend** for your compiler project. It is designed as a
-**rule‑based compiler engine**:
+This is the React frontend for your compiler project. It focuses on **visually explaining lexical, syntax, and semantic errors**, and showing how the backend's resolution routines fix them.
 
-- errors are detected by analyzers (lexical / syntax / semantic)
-- errors are classified
-- errors are mapped to specific **resolver routines**
-- each resolver modifies the source code according to predefined rules
+## Main ideas
 
-At every step, the behavior is deterministic and explainable (no ML).
+- **Source Code Panel** – text editor where the learner pastes or types code.
+- **Error & Explanation Panel** – shows each detected error with type, location, message, and a friendly hint.
+- **Fixed Code Panel** – shows the corrected version of the code plus a human-friendly explanation.
 
-### Folder structure
+The layout is designed for students and beginners learning how compilers detect and resolve errors.
 
-- `main.py` – FastAPI entry point, exposes `/analyze`
-- `models.py` – `CompilerError` structured error representation
-- `analyzer/` – pure analysis logic
-  - `lexer.py` – placeholder for lexical analysis
-  - `syntax.py` – missing‑semicolon detection for C‑style code
-  - `semantic.py` – placeholder for semantic checks
-  - `classifier.py` – orchestrates analyzers and chooses resolvers
-- `resolver/` – code‑fix routines
-  - `syntax.py` – auto‑adds missing semicolons
-  - `lexical.py` – placeholder for lexical fixes
-  - `semantic.py` – placeholder for semantic fixes
-  - `base.py` – generic `Resolver` interface (for future extension)
-- `utils.py` – shared helpers
+## Running the frontend
 
-### API contract
-
-`POST /analyze`
-
-Request body:
-
-```json
-{
-  "language": "c",
-  "source_code": "int main() { printf(\"Hello\"); return 0; }"
-}
-```
-
-Response body:
-
-```json
-{
-  "errors": [
-    {
-      "type": "Syntax Error",
-      "code": "MISSING_SEMICOLON",
-      "message": "Missing semicolon at end of line.",
-      "line": 2,
-      "column": 23,
-      "hint": "Add a semicolon at the end of the statement."
-    }
-  ],
-  "fixed_code": "/* auto‑fixed code as a single string */",
-  "explanation": "Human‑friendly explanation of what was detected and how it was fixed."
-}
-```
-
-This matches what the React frontend expects:
-
-- `errors` → drives the error cards
-- `fixed_code` → shown in the fixed‑code panel
-- `explanation` → shown as narrative text
-
-### Running the backend
-
-From the `backend` folder:
+From the `compiler_pbl` folder:
 
 ```bash
-pip install -r requirements.txt
-uvicorn main:app --reload
+npm install
+npm run dev
 ```
 
-The API will be available at `http://localhost:8000`.
+By default, Vite will start the app on port `5173`.
+
+## Hooking up the FastAPI backend
+
+In `src/App.jsx`, the `handleAnalyze` function currently uses a mocked response so you can see the full UI behavior without a running backend.
+
+Once your FastAPI API is ready, replace the mock with a real request:
+
+```js
+const response = await fetch('http://localhost:8000/analyze', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ language: 'c', source_code: sourceCode })
+});
+const data = await response.json();
+setErrors(data.errors);
+setFixedCode(data.fixed_code);
+setExplanation(data.explanation);
+```
+
+Adjust the URL and payload to match your actual backend design.
 
