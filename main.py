@@ -21,7 +21,7 @@ def analyze(req: AnalyzeRequest):
     - auto-fixed code (if applicable)
     - plain‑English explanation
     """
-    # For now, language is unused but kept for future extension (C/C++/Java, etc.)
+    # For now, language is unused but kept for future extension (C/C++/Java)
     result = analyze_code(req.source_code)
     return result
 
