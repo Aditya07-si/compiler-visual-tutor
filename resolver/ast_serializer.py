@@ -1,11 +1,3 @@
-"""
-ast_serializer.py
------------------
-Converts the internal Python AST objects produced by analyzer/syntax.py
-into a clean, JSON-serializable dictionary that matches the spec:
-
-  Input Code → Lexer → Parser → AST (this output) → TAC Generator → Optimizer
-"""
 
 from typing import Optional
 from analyzer.syntax import (
