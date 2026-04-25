@@ -134,3 +134,118 @@ def analyze_semantics(ast: ASTNode):
             })
 
     return errors
+    """ new code for the scope and cound checking"""
+"""from analyzer.syntax import ASTNode, Program, Block, VarDecl, Assignment, BinaryExpr, Literal, Identifier
+
+class SymbolTable:
+    """Manages hierarchical scopes for variables."""
+    def __init__(self, parent=None):
+        self.symbols = {}  # name -> {"type": str, "line": int, "size": int or None}
+        self.parent = parent
+        self.used_variables = set()
+
+    def define(self, name, type_info):
+        self.symbols[name] = type_info
+
+    def lookup(self, name):
+        if name in self.symbols:
+            return self.symbols[name]
+        if self.parent:
+            return self.parent.lookup(name)
+        return None
+
+    def mark_used(self, name):
+        if name in self.symbols:
+            self.used_variables.add(name)
+        elif self.parent:
+            self.parent.mark_used(name)
+
+def analyze_semantics(ast: ASTNode):
+    errors = []
+    current_scope = SymbolTable()  # Global scope
+
+    def add_error(code, message, node, hint="", severity="Semantic Error"):
+        errors.append({
+            "type": severity,
+            "code": code,
+            "message": message,
+            "line": getattr(node, 'line', 1),
+            "column": getattr(node, 'column', 1),
+            "hint": hint,
+            "auto_corrected": False
+        })
+
+    def visit(node):
+        nonlocal current_scope
+        if not node: return
+
+        # --- Dispatcher Pattern for Optimization ---
+        nodetype = type(node)
+        
+        if nodetype is Program or nodetype is Block:
+            # Enter new scope
+            previous_scope = current_scope
+            current_scope = SymbolTable(parent=previous_scope)
+            
+            for stmt in node.statements:
+                visit(stmt)
+            
+            # Check for unused variables in this scope before exiting
+            for var, info in current_scope.symbols.items():
+                if var not in current_scope.used_variables:
+                    add_error("UNUSED_VARIABLE", f"'{var}' is never used.", info['node'], 
+                              "Remove it to save memory.", "Warning")
+            
+            current_scope = previous_scope
+
+        elif nodetype is VarDecl:
+            if node.var_name in current_scope.symbols:
+                add_error("MULTIPLE_DECLARATION", f"'{node.var_name}' already declared.", node)
+            else:
+                # Handle Array Sizes for Bound Checking
+                array_size = getattr(node, "size", None)
+                current_scope.define(node.var_name, {
+                    "type": node.type_name, 
+                    "line": node.line, 
+                    "size": array_size,
+                    "node": node
+                })
+            
+            if getattr(node, "init_expr", None):
+                visit(node.init_expr)
+
+        elif nodetype is Assignment:
+            info = current_scope.lookup(node.var_name)
+            if not info:
+                add_error("UNDECLARED_VARIABLE", f"'{node.var_name}' not declared.", node)
+            else:
+                current_scope.mark_used(node.var_name)
+                
+                # --- Array Bound Checking ---
+                index_expr = getattr(node, "index", None)
+                if index_expr:
+                    if info["size"] is None:
+                        add_error("NOT_AN_ARRAY", f"'{node.var_name}' is not an array.", node)
+                    elif isinstance(index_expr, Literal) and index_expr.type_str == "INT":
+                        idx_val = int(index_expr.value)
+                        if idx_val < 0 or idx_val >= info["size"]:
+                            add_error("OUT_OF_BOUNDS", 
+                                     f"Index {idx_val} out of bounds for array '{node.var_name}' (size {info['size']}).", node)
+                
+                visit(node.expr)
+
+        elif nodetype is Identifier:
+            name = node.name.replace("()", "")
+            if name not in ["printf", "scanf", "main"]:
+                info = current_scope.lookup(name)
+                if not info:
+                    add_error("UNDECLARED_VARIABLE", f"'{name}' not declared.", node)
+                else:
+                    current_scope.mark_used(name)
+
+        elif nodetype is BinaryExpr:
+            visit(node.left)
+            visit(node.right)
+
+    visit(ast)
+    return errors """
